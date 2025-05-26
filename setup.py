@@ -35,7 +35,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'wl_config_manager=config_manager.cli:main',
+            'wl_config_manager=wl_config_manager.cli:main',
         ],
     },
     keywords="configuration, config, yaml, json, ini, environment, variables",

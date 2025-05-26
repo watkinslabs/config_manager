@@ -20,7 +20,7 @@ logger.addHandler(handler)
 logger.setLevel(logging.WARNING)  
 
 
-class Config:
+class ConfigManager:
     """
     Flexible configuration manager that supports multiple file formats,
     environment variable overrides, and dot notation access.
@@ -495,7 +495,7 @@ class Config:
         logger.info(f"Reloading configuration from {self._config_path}")
         
         # Create a new instance with the same parameters
-        new_config = Config(
+        new_config = ConfigManager(
             config_path=self._config_path,
             default_config=self._default_config,
             env_prefix=self._env_prefix,

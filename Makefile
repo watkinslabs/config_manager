@@ -65,7 +65,7 @@ test-cov:
 
 # Install package locally
 install: build
-	$(PIP) install --user dist/$(MODULE_NAME)-$(VERSION).tar.gz
+	$(PIP) install --user dist/$(MODULE_NAME)-$(VERSION).tar.gz 
 
 # Uninstall package
 uninstall:

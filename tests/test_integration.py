@@ -11,7 +11,7 @@ from pathlib import Path
 # Add the parent directory to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from wl_config_manager import Config, config_manager, setup_file_logging
+from wl_config_manager import ConfigManager, setup_file_logging
 from wl_config_manager.errors import ConfigError, ConfigFileError, ConfigValidationError
 
 
@@ -41,7 +41,7 @@ class TestIntegration:
                 }
             }
             
-            config = config_manager(
+            config = ConfigManager(
                 config_path=yaml_path,
                 default_config=default_config,
                 env_prefix='MYAPP_',
@@ -74,7 +74,7 @@ class TestIntegration:
             config.save(json_path)
             
             # 6. Load the saved file and verify
-            new_config = Config(config_path=json_path)
+            new_config = ConfigManager(config_path=json_path)
             assert new_config.app.version == '2.0.0'
             assert new_config.features.enabled == ['feature1', 'feature2']
             assert new_config.app.name == 'TestApp'
@@ -104,7 +104,7 @@ class TestIntegration:
         nonexistent_path = os.path.join(temp_dir, 'nonexistent.yaml')
         
         with pytest.raises(ConfigFileError):
-            Config(config_path=nonexistent_path)
+            ConfigManager(config_path=nonexistent_path)
         
         # 2. Create a file with invalid content
         invalid_path = os.path.join(temp_dir, 'invalid.yaml')
@@ -112,7 +112,7 @@ class TestIntegration:
             f.write('invalid: yaml: :\n  - missing" quote\n')
         
         with pytest.raises(ConfigFileError):
-            Config(config_path=invalid_path)
+            ConfigManager(config_path=invalid_path)
         
         # 3. Missing required keys
         valid_path = os.path.join(temp_dir, 'valid.yaml')
@@ -120,7 +120,7 @@ class TestIntegration:
             yaml.dump({'app': {'version': '1.0.0'}}, f)
         
         with pytest.raises(ConfigValidationError) as exc_info:
-            Config(
+            ConfigManager(
                 config_path=valid_path,
                 required_keys=['app.name', 'server.host']
             )
@@ -130,7 +130,7 @@ class TestIntegration:
         assert 'server.host' in str(exc_info.value)
         
         # 5. Test recovering with default values
-        config = Config(
+        config = ConfigManager(
             config_path=valid_path,
             default_config={
                 'app': {
@@ -159,7 +159,7 @@ class TestIntegration:
         )
         
         # Perform some operations that generate log messages
-        config = Config(
+        config = ConfigManager(
             default_config={'app': {'name': 'LogTest'}},
             log_level=logging.DEBUG
         )
@@ -170,7 +170,7 @@ class TestIntegration:
         nonexistent = os.path.join(temp_dir, 'nonexistent', 'config.yaml')
         
         try:
-            Config(config_path=nonexistent)
+            ConfigManager(config_path=nonexistent)
         except ConfigFileError:
             pass
         

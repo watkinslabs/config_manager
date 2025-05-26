@@ -6,9 +6,10 @@ name = "pypi"
 [packages]
 setuptools = "*"
 twine = "*"
-wl-version-manager = "*"
 pyyaml = "*"
 pytest = "*"
+wl-version-manager = "*"
+flort = "*"
 
 [dev-packages]
 

@@ -10,7 +10,7 @@ from pathlib import Path
 # Add the parent directory to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from wl_config_manager import Config, config_manager, ConfigError, ConfigFileError, ConfigValidationError
+from wl_config_manager import ConfigManager, ConfigError, ConfigFileError, ConfigValidationError
 
 
 class TestConfig:
@@ -70,21 +70,21 @@ class TestConfig:
     
     def test_load_yaml_config(self):
         """Test loading a YAML configuration file"""
-        config = Config(config_path=self.yaml_path)
+        config = ConfigManager(config_path=self.yaml_path)
         assert config.app.name == 'TestApp'
         assert config.server.port == 8000
         assert config.database.url == 'sqlite:///test.db'
     
     def test_load_json_config(self):
         """Test loading a JSON configuration file"""
-        config = Config(config_path=self.json_path)
+        config = ConfigManager(config_path=self.json_path)
         assert config.app.name == 'TestApp'
         assert config.server.port == 8000
         assert config.database.url == 'sqlite:///test.db'
     
     def test_load_ini_config(self):
         """Test loading an INI configuration file"""
-        config = Config(config_path=self.ini_path)
+        config = ConfigManager(config_path=self.ini_path)
         assert config.app.name == 'TestApp'
         assert config.server.port == '8000'  # INI values are strings
         assert config.database.url == 'sqlite:///test.db'
@@ -103,7 +103,7 @@ class TestConfig:
         }
         
         # Load with both default and file
-        config = Config(config_path=self.yaml_path, default_config=default_config)
+        config = ConfigManager(config_path=self.yaml_path, default_config=default_config)
         
         # File values should override defaults
         assert config.app.name == 'TestApp'
@@ -115,15 +115,10 @@ class TestConfig:
         # Values only in file should be present
         assert config.server.port == 8000
     
-    def test_config_manager_function(self):
-        """Test the config_manager function"""
-        config = config_manager(self.yaml_path)
-        assert config.app.name == 'TestApp'
-        assert config.server.port == 8000
     
     def test_get_config(self):
         """Test getting the entire configuration as a dict"""
-        config = Config(config_path=self.yaml_path)
+        config = ConfigManager(config_path=self.yaml_path)
         config_dict = config.get_config()
         
         assert config_dict['app']['name'] == 'TestApp'
@@ -132,7 +127,7 @@ class TestConfig:
     
     def test_get_method(self):
         """Test the get method for accessing values"""
-        config = Config(config_path=self.yaml_path)
+        config = ConfigManager(config_path=self.yaml_path)
         
         # Get with dot notation
         assert config.get('app.name') == 'TestApp'
@@ -147,7 +142,7 @@ class TestConfig:
     
     def test_set_method(self):
         """Test setting configuration values"""
-        config = Config(config_path=self.yaml_path)
+        config = ConfigManager(config_path=self.yaml_path)
         
         # Set a simple value
         config.set('app.name', 'NewName')
@@ -159,7 +154,7 @@ class TestConfig:
     
     def test_update_method(self):
         """Test updating multiple configuration values"""
-        config = Config(config_path=self.yaml_path)
+        config = ConfigManager(config_path=self.yaml_path)
         
         updates = {
             'app': {
@@ -181,7 +176,7 @@ class TestConfig:
     
     def test_items_method(self):
         """Test the items method"""
-        config = Config(config_path=self.yaml_path)
+        config = ConfigManager(config_path=self.yaml_path)
         
         # Top-level items
         top_items = dict(config.items())
@@ -195,7 +190,7 @@ class TestConfig:
     
     def test_save_method(self):
         """Test saving configuration to a file"""
-        config = Config(config_path=self.yaml_path)
+        config = ConfigManager(config_path=self.yaml_path)
         
         # Modify the configuration
         config.set('app.name', 'SavedApp')
@@ -206,13 +201,13 @@ class TestConfig:
         config.save(new_path)
         
         # Load the saved file and check values
-        new_config = Config(config_path=new_path)
+        new_config = ConfigManager(config_path=new_path)
         assert new_config.app.name == 'SavedApp'
         assert new_config.new_section.key == 'value'
     
     def test_from_dict_classmethod(self):
         """Test creating a Config from a dictionary"""
-        config = Config.from_dict(self.sample_config)
+        config = ConfigManager.from_dict(self.sample_config)
         
         assert config.app.name == 'TestApp'
         assert config.server.port == 8000
@@ -226,7 +221,7 @@ class TestConfig:
         os.environ['TEST_DATABASE__URL'] = 'sqlite:///env.db'
         
         try:
-            config = Config.from_env('TEST_')
+            config = ConfigManager.from_env('TEST_')
             
             assert config.app.name == 'EnvApp'
             assert config.server.port == 9000  # Should be converted to int
@@ -244,7 +239,7 @@ class TestConfig:
         os.environ['TEST_SERVER__PORT'] = '9000'
         
         try:
-            config = Config(
+            config = ConfigManager(
                 config_path=self.yaml_path,
                 env_prefix='TEST_'
             )
@@ -264,7 +259,7 @@ class TestConfig:
     def test_required_keys(self):
         """Test validation of required keys"""
         # All required keys present
-        config = Config(
+        config = ConfigManager(
             config_path=self.yaml_path,
             required_keys=['app.name', 'server.host', 'server.port']
         )
@@ -274,7 +269,7 @@ class TestConfig:
         
         # Missing required key
         with pytest.raises(ConfigValidationError):
-            Config(
+            ConfigManager(
                 config_path=self.yaml_path,
                 required_keys=['app.name', 'missing.key']
             )
@@ -286,7 +281,7 @@ class TestConfig:
             self.temp_dir
         ]
         
-        config = Config(search_paths=search_paths)
+        config = ConfigManager(search_paths=search_paths)
         
         # Should find and load one of the config files
         assert hasattr(config, 'app')
@@ -294,7 +289,7 @@ class TestConfig:
     
     def test_reload_method(self):
         """Test reloading configuration from file"""
-        config = Config(config_path=self.yaml_path)
+        config = ConfigManager(config_path=self.yaml_path)
         
         # Modify the config file
         modified_config = self.sample_config.copy()
@@ -314,7 +309,7 @@ class TestConfig:
         nonexistent_path = os.path.join(self.temp_dir, 'nonexistent.yaml')
         
         with pytest.raises(ConfigFileError):
-            Config(config_path=nonexistent_path)
+            ConfigManager(config_path=nonexistent_path)
     
     def test_invalid_format(self):
         """Test handling of invalid format errors"""
@@ -324,4 +319,4 @@ class TestConfig:
             f.write('invalid: yaml: content:\n  - missing" quote\n')
         
         with pytest.raises(ConfigFileError):
-            Config(config_path=invalid_path)
+            ConfigManager(config_path=invalid_path)

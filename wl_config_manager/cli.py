@@ -11,7 +11,7 @@ import logging
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 
-from .config import Config, DEFAULT_SEARCH_PATHS
+from .config_manager import ConfigManager, DEFAULT_SEARCH_PATHS
 from .errors import ConfigError
 
 def setup_parser() -> argparse.ArgumentParser:
@@ -221,7 +221,7 @@ def cmd_get(args: argparse.Namespace) -> int:
         Exit code (0 for success, non-zero for error)
     """
     try:
-        config = Config(config_path=args.config_file)
+        config = ConfigManager(config_path=args.config_file)
         
         if args.key:
             # Get a specific key
