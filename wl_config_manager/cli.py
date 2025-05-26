@@ -26,14 +26,14 @@ def setup_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  config_manager get config.yaml app.name
-  config_manager get --format=json config.yaml server
-  config_manager set config.yaml app.debug true
-  config_manager create --format=yaml default_config.yaml
-  config_manager validate --required=app.name,server.port config.yaml
-  config_manager convert config.ini config.yaml
-  config_manager list config.yaml
-  config_manager env MYAPP_ --format=json
+  wl_config_manager get config.yaml app.name
+  wl_config_manager get --format=json config.yaml server
+  wl_config_manager set config.yaml app.debug true
+  wl_config_manager create --format=yaml default_config.yaml
+  wl_config_manager validate --required=app.name,server.port config.yaml
+  wl_config_manager convert config.ini config.yaml
+  wl_config_manager list config.yaml
+  wl_config_manager env MYAPP_ --format=json
         """
     )
     
@@ -121,7 +121,7 @@ def format_output(data: Any, format_type: Optional[str] = None) -> str:
     # First, convert SimpleNamespace to dict if needed
     from types import SimpleNamespace
     if isinstance(data, SimpleNamespace):
-        from config_manager.dot_notation import namespace_to_dict
+        from wl_config_manager.dot_notation import namespace_to_dict
         data = namespace_to_dict(data)
     
     if format_type == 'yaml':
@@ -239,7 +239,7 @@ def cmd_get(args: argparse.Namespace) -> int:
         # Convert SimpleNamespace to dict for formatting
         from types import SimpleNamespace
         if isinstance(value, SimpleNamespace):
-            import config_manager.dot_notation as dn
+            import wl_config_manager.dot_notation as dn
             value = dn.namespace_to_dict(value)
             
         print(format_output(value, args.format))

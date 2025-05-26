@@ -5,7 +5,7 @@ import pytest
 # Add the parent directory to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from config_manager.errors import ConfigError, ConfigFileError, ConfigFormatError, ConfigValidationError
+from wl_config_manager.errors import ConfigError, ConfigFileError, ConfigFormatError, ConfigValidationError
 
 
 class TestErrors:

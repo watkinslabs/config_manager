@@ -7,6 +7,8 @@ name = "pypi"
 setuptools = "*"
 twine = "*"
 wl-version-manager = "*"
+pyyaml = "*"
+pytest = "*"
 
 [dev-packages]
 

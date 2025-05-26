@@ -11,8 +11,8 @@ from pathlib import Path
 # Add the parent directory to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from config_manager import Config, config_manager, setup_file_logging
-from config_manager.errors import ConfigError, ConfigFileError, ConfigValidationError
+from wl_config_manager import Config, config_manager, setup_file_logging
+from wl_config_manager.errors import ConfigError, ConfigFileError, ConfigValidationError
 
 
 class TestIntegration:

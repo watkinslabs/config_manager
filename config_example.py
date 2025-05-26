@@ -5,7 +5,7 @@ Example usage of the config_manager module
 
 import os
 import sys
-from config_manager import Config, setup_file_logging
+from wl_config_manager import Config, setup_file_logging
 
 # Set up logging to file if running as root
 if os.geteuid() == 0:

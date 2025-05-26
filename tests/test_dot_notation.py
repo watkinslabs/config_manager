@@ -6,7 +6,7 @@ from types import SimpleNamespace
 # Add the parent directory to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from config_manager.dot_notation import dict_to_namespace, namespace_to_dict, deep_merge
+from wl_config_manager.dot_notation import dict_to_namespace, namespace_to_dict, deep_merge
 
 
 class TestDotNotation:

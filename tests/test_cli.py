@@ -11,7 +11,7 @@ from pathlib import Path
 # Add the parent directory to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from config_manager.cli import main, setup_parser, cmd_get, cmd_set, cmd_create, cmd_validate
+from wl_config_manager.cli import main, setup_parser, cmd_get, cmd_set, cmd_create, cmd_validate
 
 
 class TestCLI:
