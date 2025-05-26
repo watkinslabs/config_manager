@@ -3,4 +3,6 @@
 *.tar
 *.yaml
 __pycache__
-
+*.flort.txt
+*.egg-info
+*.lock

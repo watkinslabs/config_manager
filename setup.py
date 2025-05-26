@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 from setuptools import setup, find_packages
+from wl_version_manager import VersionManager
+
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name="config_manager",
-    version="0.1.0",
+    name="wl_config_manager",
+    version=VersionManager.get_version(),
     author="Chris Watkins",
     author_email="chris@watkinslabs.com",
     description="A flexible configuration manager for Python applications",
