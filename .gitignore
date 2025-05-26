@@ -1,0 +1,6 @@
+*.gz
+*.zip
+*.tar
+*.yaml
+__pycache__
+
