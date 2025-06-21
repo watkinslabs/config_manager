@@ -1,9 +1,8 @@
 from types import SimpleNamespace
-from typing import Dict, Any, List
-from types import SimpleNamespace
+from typing import Dict, Any, List, Optional
 
 class IterableNamespace(SimpleNamespace):
-    """A SimpleNamespace that's also iterable"""
+    """A SimpleNamespace that's also iterable and dict-like"""
     
     def __iter__(self):
         """Make the namespace iterable, returning (key, value) pairs"""
@@ -23,7 +22,80 @@ class IterableNamespace(SimpleNamespace):
     
     def __repr__(self):
         """Override the repr to look cleaner"""
-        return self.__str__()            
+        return self.__str__()
+    
+    def get(self, key: str, default: Any = None) -> Any:
+        """Get a value by key, returning default if not found (dict-like behavior)"""
+        return vars(self).get(key, default)
+    
+    def keys(self):
+        """Return keys (dict-like behavior)"""
+        return vars(self).keys()
+    
+    def values(self):
+        """Return values (dict-like behavior)"""
+        return vars(self).values()
+    
+    def items(self):
+        """Return items as (key, value) pairs (dict-like behavior)"""
+        return vars(self).items()
+    
+    def __contains__(self, key: str) -> bool:
+        """Check if key exists (dict-like behavior)"""
+        return key in vars(self)
+    
+    def __getitem__(self, key: str) -> Any:
+        """Get item using bracket notation (dict-like behavior)"""
+        attrs = vars(self)
+        if key not in attrs:
+            raise KeyError(key)
+        return attrs[key]
+    
+    def __setitem__(self, key: str, value: Any) -> None:
+        """Set item using bracket notation (dict-like behavior)"""
+        setattr(self, key, value)
+    
+    def update(self, other: Optional[Dict] = None, **kwargs) -> None:
+        """Update namespace with dictionary or kwargs (dict-like behavior)"""
+        if other is not None:
+            if hasattr(other, 'items'):
+                for key, value in other.items():
+                    setattr(self, key, value)
+            else:
+                for key, value in other:
+                    setattr(self, key, value)
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+    
+    def pop(self, key: str, default: Any = None) -> Any:
+        """Remove and return a value by key (dict-like behavior)"""
+        attrs = vars(self)
+        if key in attrs:
+            value = attrs[key]
+            delattr(self, key)
+            return value
+        return default
+    
+    def setdefault(self, key: str, default: Any = None) -> Any:
+        """Get value by key, setting it to default if not found (dict-like behavior)"""
+        if not hasattr(self, key):
+            setattr(self, key, default)
+        return getattr(self, key)
+    
+    def clear(self) -> None:
+        """Remove all items (dict-like behavior)"""
+        for key in list(vars(self).keys()):
+            delattr(self, key)
+    
+    def copy(self) -> 'IterableNamespace':
+        """Create a shallow copy (dict-like behavior)"""
+        new_ns = IterableNamespace()
+        new_ns.update(vars(self))
+        return new_ns
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to a regular dictionary"""
+        return namespace_to_dict(self)
 
 def dict_to_namespace(d):
     """
