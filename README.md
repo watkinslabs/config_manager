@@ -1,278 +1,408 @@
 # WL Config Manager
 
-A flexible configuration manager for Python applications supporting multiple file formats, environment variable overrides, and dot notation access.
+A flexible configuration manager for Python applications that supports multiple file formats, environment variable overrides, and dot notation access.
 
 ## Features
 
-- **Multiple Formats**: YAML, JSON, and INI support
-- **Environment Variables**: Override config values with env vars
-- **Dot Notation**: Access nested config values with simple syntax
-- **Default Values**: Merge user config with application defaults
-- **Validation**: Ensure required keys are present
-- **Auto-Discovery**: Find config files in standard locations
-- **CLI Tools**: Command-line utilities for config management
-- **Logging Integration**: Built-in logging support
+- **Multiple Formats** - YAML, JSON, and INI configuration files
+- **Dot Notation** - Access nested values with `config.server.port`
+- **Environment Variables** - Override config values with environment variables
+- **Default Values** - Built-in defaults with easy overrides
+- **File Search** - Automatically find config files in standard locations
+- **Validation** - Ensure required keys are present
+- **CLI Tool** - Command-line interface for config manipulation
+- **Type Conversion** - Automatic type conversion for environment variables
+- **Live Reload** - Reload configuration without restarting
 
 ## Installation
 
 ```bash
-pip install wl_config_manager
+pip install wl-config-manager
 ```
 
+## Dependencies
+
+- `wl_version_manager`
+- `pyyaml>=5.1`
+
 ## Quick Start
+
+### Basic Usage
 
 ```python
 from wl_config_manager import ConfigManager
 
-# Load configuration with defaults
+# Load config from file
+config = ConfigManager(config_path="config.yaml")
+
+# Access values with dot notation
+port = config.server.port
+debug = config.app.debug
+
+# Or use get() method
+database_url = config.get("database.url", default="sqlite:///app.db")
+```
+
+### Configuration File Example
+
+```yaml
+# config.yaml
+app:
+  name: "My Application"
+  debug: false
+  version: "1.0.0"
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+  workers: 4
+
+database:
+  url: "postgresql://localhost/myapp"
+  pool_size: 10
+  echo: false
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+```
+
+## Configuration Loading
+
+### Search Paths
+
+If no config path is specified, the manager searches these locations in order:
+
+```python
+from wl_config_manager import ConfigManager, DEFAULT_SEARCH_PATHS
+
+# Default search paths on Fedora/CentOS:
+# - ~/.config/
+# - /etc/
+# - /etc/app/
+# - current working directory
+
+# Use default search paths
+config = ConfigManager(search_paths=DEFAULT_SEARCH_PATHS)
+
+# Or specify custom search paths
+config = ConfigManager(search_paths=["/opt/myapp", "/etc/myapp"])
+```
+
+### File Formats
+
+The format is auto-detected by file extension, or can be specified:
+
+```python
+# Auto-detect format
+config = ConfigManager(config_path="settings.json")  # JSON
+config = ConfigManager(config_path="app.ini")       # INI
+config = ConfigManager(config_path="config.yaml")   # YAML
+
+# Explicitly specify format
+config = ConfigManager(config_path="myconfig", format="yaml")
+```
+
+## Environment Variable Overrides
+
+Override configuration values using environment variables:
+
+```python
+# Configure with env prefix
+config = ConfigManager(
+    config_path="config.yaml",
+    env_prefix="MYAPP_"
+)
+
+# Environment variables override config file values
+# MYAPP_SERVER__PORT=9000 overrides server.port
+# MYAPP_APP__DEBUG=true overrides app.debug
+# MYAPP_DATABASE__URL=postgres://prod-server/db overrides database.url
+```
+
+Environment variable rules:
+- Prefix + double underscore (`__`) for nested values
+- Values are automatically converted to appropriate types (bool, int, float, string)
+- Case-insensitive (environment vars are converted to lowercase)
+
+## Default Configuration
+
+Provide default values that are used if not found in config file or environment:
+
+```python
 default_config = {
-    'app': {
-        'name': 'MyApp',
-        'debug': False
+    "app": {
+        "name": "DefaultApp",
+        "debug": False
     },
-    'server': {
-        'host': '127.0.0.1',
-        'port': 8080
+    "server": {
+        "port": 8080,
+        "host": "localhost"
     }
 }
 
 config = ConfigManager(
-    config_path='config.yaml',
-    default_config=default_config,
-    env_prefix='MYAPP_',
-    required_keys=['app.name', 'server.host']
+    config_path="config.yaml",
+    default_config=default_config
 )
-
-# Access with dot notation
-print(config.app.name)
-print(config.server.port)
-
-# Get with fallback
-debug_mode = config.get('app.debug', False)
-
-# Modify values
-config.set('app.version', '2.0.0')
-config.save('updated_config.yaml')
 ```
 
-## Configuration Files
+## Validation
 
-### YAML Example
-```yaml
-app:
-  name: MyApp
-  version: 1.0.0
-  debug: true
+Ensure required configuration keys are present:
 
-server:
-  host: 0.0.0.0
-  port: 8080
-  timeout: 30
-
-database:
-  url: sqlite:///app.db
-  pool_size: 5
+```python
+# Validate required keys
+config = ConfigManager(
+    config_path="config.yaml",
+    required_keys=["app.name", "server.port", "database.url"]
+)
+# Raises ConfigValidationError if any required keys are missing
 ```
 
-### JSON Example
-```json
-{
-  "app": {
-    "name": "MyApp",
-    "version": "1.0.0",
-    "debug": true
-  },
-  "server": {
-    "host": "0.0.0.0",
-    "port": 8080,
-    "timeout": 30
-  }
-}
+## Accessing Configuration Values
+
+### Dot Notation Access
+
+```python
+# Direct attribute access
+app_name = config.app.name
+port = config.server.port
+
+# Nested access
+log_level = config.logging.level
+
+# Safe access with get()
+smtp_host = config.get("email.smtp.host", default="localhost")
+
+# Get entire sections
+server_config = config.server  # Returns namespace object
+server_dict = config.get("server")  # Returns dict
 ```
 
-## Environment Variables
+### Dictionary-like Access
 
-Override config values using environment variables with your chosen prefix:
+```python
+# The configuration objects support dict-like operations
+if "debug" in config.app:
+    print(f"Debug mode: {config.app.debug}")
 
-```bash
-export MYAPP_SERVER__HOST=0.0.0.0
-export MYAPP_SERVER__PORT=9000
-export MYAPP_APP__DEBUG=true
+# Iterate over sections
+for section, values in config:
+    print(f"{section}: {values}")
+
+# Get items from a section
+for key, value in config.items("server"):
+    print(f"{key} = {value}")
 ```
 
-Use double underscores (`__`) for nested values.
+## Modifying Configuration
+
+### Set Values
+
+```python
+# Set single value
+config.set("app.version", "2.0.0")
+config.set("server.port", 9000)
+
+# Create nested structures
+config.set("new_feature.enabled", True)
+config.set("new_feature.options.timeout", 30)
+
+# Update multiple values
+config.update({
+    "version": "2.0.0",
+    "debug": True
+})
+
+# Update with prefix
+config.update({"port": 9000, "workers": 8}, prefix="server")
+```
+
+### Save Configuration
+
+```python
+# Save to original file
+config.save()
+
+# Save to different file
+config.save("new_config.yaml")
+
+# Save in different format
+config.save("config.json")  # Auto-converts to JSON
+```
 
 ## Advanced Usage
 
-### Search Paths
-```python
-search_paths = [
-    os.path.expanduser('~/.config/myapp'),
-    '/etc/myapp',
-    os.getcwd()
-]
+### Reload Configuration
 
-config = ConfigManager(search_paths=search_paths)
+```python
+# Reload from source file (picks up external changes)
+config.reload()
 ```
 
-### Validation
-```python
-config = ConfigManager(
-    config_path='config.yaml',
-    required_keys=['database.url', 'api.key', 'server.port']
-)
-```
+### Create from Dictionary
 
-### Multiple Updates
 ```python
-updates = {
-    'app': {
-        'name': 'UpdatedApp',
-        'version': '2.0.0'
-    },
-    'features': {
-        'cache_enabled': True
-    }
+config_dict = {
+    "app": {"name": "MyApp"},
+    "server": {"port": 8080}
 }
-config.update(updates)
+
+config = ConfigManager.from_dict(config_dict)
 ```
 
-### Class Methods
-```python
-# From dictionary
-config = ConfigManager.from_dict({
-    'app': {'name': 'DictApp'}
-})
+### Create from Environment Only
 
-# From environment only
-config = ConfigManager.from_env('MYAPP_')
+```python
+# Load configuration entirely from environment variables
+config = ConfigManager.from_env("MYAPP_")
+```
+
+### Logging Configuration
+
+```python
+# Set logging level for config manager
+config = ConfigManager(
+    config_path="config.yaml",
+    log_level=logging.DEBUG  # See config loading details
+)
+
+# Set up file logging
+from wl_config_manager import setup_file_logging
+
+setup_file_logging(
+    log_dir="/var/log",
+    app_name="myapp",
+    log_level=logging.INFO
+)
 ```
 
 ## Command Line Interface
 
-The package includes a powerful CLI for config management:
+The package includes a CLI tool for managing configurations:
+
+### View Configuration
 
 ```bash
-# Get configuration values
-wl_config_manager get config.yaml app.name
-wl_config_manager get config.yaml server --format=json
+# Get entire config
+wl_config_manager get config.yaml
 
+# Get specific value
+wl_config_manager get config.yaml server.port
+
+# Get with default
+wl_config_manager get config.yaml app.missing --default="not found"
+
+# Output as JSON
+wl_config_manager get --format=json config.yaml
+```
+
+### Modify Configuration
+
+```bash
 # Set values
 wl_config_manager set config.yaml app.debug true
-wl_config_manager set config.yaml new.nested.value 42
+wl_config_manager set config.yaml server.port 9000
 
-# Create new config
-wl_config_manager create new_config.yaml --vars='{"app.name":"NewApp"}'
+# Create new config file
+wl_config_manager create --format=yaml new_config.yaml
 
-# Validate configuration
-wl_config_manager validate config.yaml --required=app.name,server.port
+# Create from template
+wl_config_manager create --template=default.yaml --vars='{"app":{"name":"MyApp"}}' config.yaml
+```
 
+### Validate Configuration
+
+```bash
+# Check required keys
+wl_config_manager validate --required=app.name,server.port config.yaml
+```
+
+### Convert Formats
+
+```bash
 # Convert between formats
-wl_config_manager convert config.yaml config.json
+wl_config_manager convert config.ini config.yaml
+wl_config_manager convert settings.yaml settings.json
+```
 
+### List Configuration
+
+```bash
 # List all values
-wl_config_manager list config.yaml --section=server
+wl_config_manager list config.yaml
 
-# Environment variables to config
-wl_config_manager env MYAPP_ --format=yaml
+# List section only
+wl_config_manager list config.yaml --section=server
+```
+
+### Environment Variables
+
+```bash
+# Show config from environment variables
+wl_config_manager env MYAPP_ --format=json
 ```
 
 ## Error Handling
 
-The package provides specific exception types for different error conditions:
+The module provides specific exceptions for different error types:
 
 ```python
-from wl_config_manager import ConfigManager
-from wl_config_manager.errors import (
-    ConfigError,
-    ConfigFileError, 
-    ConfigFormatError,
-    ConfigValidationError
+from wl_config_manager import (
+    ConfigError,           # Base exception
+    ConfigFileError,       # File not found/readable
+    ConfigFormatError,     # Invalid file format
+    ConfigValidationError  # Validation failures
 )
 
 try:
-    config = ConfigManager(
-        config_path='config.yaml',
-        required_keys=['missing.key']
-    )
+    config = ConfigManager(config_path="config.yaml")
 except ConfigFileError as e:
-    print(f"File error: {e}")
+    print(f"Config file error: {e}")
+    print(f"File path: {e.file_path}")
 except ConfigValidationError as e:
+    print(f"Validation error: {e}")
     print(f"Missing keys: {e.get_missing_keys()}")
-except ConfigError as e:
-    print(f"General config error: {e}")
 ```
 
-## Logging
+## Best Practices
 
-Enable detailed logging for debugging:
+1. **Use Environment Variables for Secrets**
+   ```bash
+   export MYAPP_DATABASE__PASSWORD="secret"
+   export MYAPP_API__KEY="secret-key"
+   ```
 
-```python
-import logging
-from wl_config_manager import setup_file_logging
+2. **Provide Sensible Defaults**
+   ```python
+   default_config = {
+       "server": {"port": 8080, "host": "0.0.0.0"},
+       "logging": {"level": "INFO"}
+   }
+   ```
 
-# File logging (when running as root)
-if os.geteuid() == 0:
-    setup_file_logging(app_name='myapp')
+3. **Validate Critical Configuration**
+   ```python
+   required_keys = ["database.url", "app.secret_key"]
+   config = ConfigManager(required_keys=required_keys)
+   ```
 
-# Or configure log level
-config = ConfigManager(
-    config_path='config.yaml',
-    log_level=logging.DEBUG
-)
-```
-
-## API Reference
-
-### ConfigManager Class
-
-#### Constructor Parameters
-- `config_path`: Path to configuration file
-- `default_config`: Dictionary of default values
-- `env_prefix`: Environment variable prefix
-- `search_paths`: List of paths to search for config files
-- `format`: Force specific format ('yaml', 'json', 'ini')
-- `required_keys`: List of required configuration keys
-- `log_level`: Logging verbosity level
-
-#### Methods
-- `get(key=None, default=None)`: Get configuration value
-- `set(key, value)`: Set configuration value
-- `update(data, prefix=None)`: Update multiple values
-- `save(config_path=None)`: Save configuration to file
-- `reload()`: Reload from source file
-- `get_config()`: Get entire config as dictionary
-- `items(section=None)`: Get key-value pairs
-
-#### Class Methods
-- `from_dict(config_dict, **kwargs)`: Create from dictionary
-- `from_env(env_prefix, **kwargs)`: Create from environment variables
-
-## Testing
-
-Run the test suite:
-
-```bash
-# Install development dependencies
-pip install pytest pyyaml
-
-# Run tests
-pytest tests/
-
-# Run with coverage
-pytest --cov=wl_config_manager tests/
-```
+4. **Use Type Hints with Config Objects**
+   ```python
+   from typing import TYPE_CHECKING
+   if TYPE_CHECKING:
+       from types import SimpleNamespace
+   
+   def setup_server(server_config: SimpleNamespace):
+       port = server_config.port
+       host = server_config.host
+   ```
 
 ## License
 
-BSD 3-Clause License
+MIT
 
-## Changelog
+## Contributing
 
-### Version 1.0.0
-- Initial release
-- Support for YAML, JSON, and INI formats
-- Environment variable overrides
-- Dot notation access
-- CLI tools
-- Comprehensive test suite
+Contributions are welcome! Please feel free to submit a Pull Request.

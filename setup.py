@@ -44,5 +44,5 @@ setup(
         "Documentation": "https://github.com/watkinslabs/config_manager",
         "Source Code": "https://github.com/watkinslabs/config_manager",
     },
-    license="BSD 3-Clause License",
+    license="MIT",
 )
